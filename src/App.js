@@ -12,19 +12,18 @@ import { DataStore } from '@aws-amplify/datastore';
 import { Todo as AWSTODO } from './models';
 
 
-
 Amplify.configure(awsconfig);
-
 
 function App() {
     // authentication   -----------------------------------
     const signIn = async () => {
-        try {
-            const user = await Auth.signIn("todo-admin", "Dhod0563");
-            console.log(user);
-        } catch (error) {
-            console.log('error signing in', error);
-        }
+        // try {
+        //     const user = await Auth.signIn("todo-admin", "Dhod0563");
+        //     console.log(user);
+        // } catch (error) {
+        //     console.log('error signing in', error);
+        // }
+        console.log("signing in...");
     }
 
     // state management -----------------------------------
@@ -54,8 +53,6 @@ function App() {
             new AWSTODO(todo)
         );
         // dont have to use .then with await if i set await to a variable like the delete/query below does
-        
-
         
         /*
         // update
