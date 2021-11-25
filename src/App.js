@@ -1,25 +1,20 @@
-import logo from './logo.svg';
 import './App.css';
 
+import Amplify from 'aws-amplify'
+import awsconfig from './aws-exports'
+Amplify.configure(awsconfig);
+
+import { Auth } from 'aws-amplify';
+import { AuthState, onAuthUIStateChange } from '@aws-amplify/ui-components';
+import { DataStore } from '@aws-amplify/datastore';
+import { Todo } from './models';
+
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <div className="App">
+            hello
+        </div>
+    );
 }
 
 export default App;

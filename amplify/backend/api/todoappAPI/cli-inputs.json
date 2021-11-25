@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "serviceConfiguration": {
+    "apiName": "todoappAPI",
+    "serviceName": "AppSync",
+    "gqlSchemaPath": "/home/damiend97/Documents/react/todo-app/amplify/backend/api/todoappAPI/schema.graphql",
+    "defaultAuthType": {
+      "mode": "API_KEY",
+      "expirationTime": 365,
+      "apiKeyExpirationDate": "2022-11-25T18:24:37.915Z",
+      "keyDescription": "todoappAPIKEY"
+    },
+    "conflictResolution": {
+      "defaultResolutionStrategy": {
+        "type": "AUTOMERGE"
+      }
+    }
+  }
+}
