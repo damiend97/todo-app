@@ -2,9 +2,8 @@ import './App.css';
 
 import Amplify from 'aws-amplify'
 import awsconfig from './aws-exports'
-import { Auth } from 'aws-amplify';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TodoForm from './TodoForm';
 import Todo from './Todo';
 
@@ -15,44 +14,63 @@ import { Todo as AWSTODO } from './models';
 Amplify.configure(awsconfig);
 
 function App() {
-    // authentication   -----------------------------------
-    const signIn = async () => {
-        // try {
-        //     const user = await Auth.signIn("todo-admin", "Dhod0563");
-        //     console.log(user);
-        // } catch (error) {
-        //     console.log('error signing in', error);
-        // }
-        console.log("signing in...");
+    // state management -----------------------------------
+    const [todos, setTodos] = useState([]);
+
+    const loadTodos = async () => {
+        let dataStoreItems = await DataStore.query(AWSTODO);
+        let todos = dataStoreItems.map(todo => {
+            return {
+                text: todo.text,
+                completed: todo.completed
+            }
+        })
+        console.log("DS ITEMS: ", dataStoreItems);
+        console.log(todos);
+        return todos;
     }
 
-    // state management -----------------------------------
-    const [todos, setTodos] = useState([
-        {
-            text: "Create App",
-            completed: false
-        },
-        {
-            text: "Take a shot",
-            completed: false
-        },
-        {
-            text: "Get realll fukkked up",
-            completed: false
-        }
-    ]);
+    useEffect(() => {
+        loadTodos()
+        .then((dbTodos) => setTodos(dbTodos));
+    }, [])
+
+    useEffect(() => {
+        loadTodos();
+    }, [todos])
 
     // todo functions   -----------------------------------
     const addTodo  = async (todo) => {
-        const newTodos = [...todos, todo];
-        setTodos(newTodos);
+        try {
+            const newTodos = [...todos, todo];
+            setTodos(newTodos);
+    
+            await DataStore.save(
+                new AWSTODO(todo)
+            );
+        } catch(e) {
+            console.log(e);
+        }
+    };
 
-        
-        // create
-        await DataStore.save(
-            new AWSTODO(todo)
-        );
-        // dont have to use .then with await if i set await to a variable like the delete/query below does
+    const removeTodo = async (index) => {
+        try {
+            const modelToDelete = await DataStore.query(AWSTODO); //, parameters ********* add index to AWSTODO schema for query params
+            DataStore.delete(modelToDelete);
+            
+            console.log(index);
+            const newTodos = [...todos];
+            newTodos.splice(index, 1);
+            setTodos(newTodos);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    
+    const completeTodo = (index) => {
+        const newTodos = [...todos];
+        newTodos[index].completed = !newTodos[index].completed;
+        setTodos(newTodos);
         
         /*
         // update
@@ -69,38 +87,7 @@ function App() {
                 "description": "Lorem ipsum dolor sit amet"
             })
         })).then(res => console.log(res));
-        // dont have to use .then with await if i set await to a variable like the delete/query below does
         */
-
-        /*
-        // delete
-        // cant figure out how this works but this is the given format
-        // is 1234... the index???
-        const modelToDelete = await DataStore.query(AWSTODO, 123456789);
-        DataStore.delete(modelToDelete);
-        */
-        
-
-        /*
-        // query
-        const models = await DataStore.query(AWSTODO);
-        console.log(models);
-        */
-        
-
-    };
-
-    const removeTodo = (index) => {
-        console.log(index);
-        const newTodos = [...todos];
-        newTodos.splice(index, 1);
-        setTodos(newTodos);
-    }
-    
-    const completeTodo = (index) => {
-        const newTodos = [...todos];
-        newTodos[index].completed = !newTodos[index].completed;
-        setTodos(newTodos);
     }
 
     return (
@@ -117,8 +104,6 @@ function App() {
             </div>
 
             <TodoForm addTodo={addTodo} />
-
-            <button onClick={signIn}>login</button>
         </div>
     );
 }
