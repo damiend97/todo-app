@@ -1,3 +1,8 @@
+// Needs a refresh after addTodo to be able to remove or update new todo
+// because id is generated only when todo object hits the database (automatically)
+// fix  - loadTodos() after addTodo? - not working
+//      - generate custom ID before database
+
 import './App.css';
 
 import Amplify from 'aws-amplify'
@@ -18,16 +23,20 @@ function App() {
     const [todos, setTodos] = useState([]);
 
     const loadTodos = async () => {
-        let dataStoreItems = await DataStore.query(AWSTODO);
-        let todos = dataStoreItems.map(todo => {
-            return {
-                text: todo.text,
-                completed: todo.completed
-            }
-        })
-        console.log("DS ITEMS: ", dataStoreItems);
-        console.log(todos);
-        return todos;
+        try {
+            let dataStoreItems = await DataStore.query(AWSTODO);
+            let todos = dataStoreItems.map(todo => {
+                return {
+                    id: todo.id,
+                    text: todo.text,
+                    completed: todo.completed
+                }
+            })
+
+            return todos;
+        } catch (e) {
+            console.log(e);
+        }
     }
 
     useEffect(() => {
@@ -42,23 +51,22 @@ function App() {
     // todo functions   -----------------------------------
     const addTodo  = async (todo) => {
         try {
-            const newTodos = [...todos, todo];
-            setTodos(newTodos);
-    
             await DataStore.save(
                 new AWSTODO(todo)
             );
+
+            const newTodos = [...todos, todo];
+            setTodos(newTodos);
         } catch(e) {
             console.log(e);
         }
     };
 
-    const removeTodo = async (index) => {
+    const removeTodo = async (index, id) => {
         try {
-            const modelToDelete = await DataStore.query(AWSTODO); //, parameters ********* add index to AWSTODO schema for query params
-            DataStore.delete(modelToDelete);
+            const modelToDelete = await DataStore.query(AWSTODO, id);
+            await DataStore.delete(modelToDelete);
             
-            console.log(index);
             const newTodos = [...todos];
             newTodos.splice(index, 1);
             setTodos(newTodos);
@@ -67,27 +75,23 @@ function App() {
         }
     }
     
-    const completeTodo = (index) => {
-        const newTodos = [...todos];
-        newTodos[index].completed = !newTodos[index].completed;
-        setTodos(newTodos);
-        
-        /*
-        // update
-        // Models in DataStore are immutable. To update a record you must use the copyOf function to apply updates to the item’s fields rather than mutating the instance directly
-        let CURRENT_ITEM = new AWSTODO({
-            "name": "Lorem ipsum dolor sit amet",
-            "description": "Lorem ipsum dolor sit amet"
-        })
+    const completeTodo = async (index, todo) => {
+        try {
+            const original = await DataStore.query(AWSTODO, todo.id);
+            const bool = original.completed;
 
-        await DataStore.save(AWSTODO.copyOf(CURRENT_ITEM, item => {
-            // Update the values on {item} variable to update DataStore entry
-            new AWSTODO({
-                "name": "Lorem ipsum dolor sit amet",
-                "description": "Lorem ipsum dolor sit amet"
-            })
-        })).then(res => console.log(res));
-        */
+            await DataStore.save(
+                AWSTODO.copyOf(original, updated => {
+                    updated.completed = !bool;
+                })
+            );
+
+            const newTodos = [...todos];
+            newTodos[index].completed = !newTodos[index].completed;
+            setTodos(newTodos);
+        } catch (e) {
+            console.log(e);
+        }
     }
 
     return (
